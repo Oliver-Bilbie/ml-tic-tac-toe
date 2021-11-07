@@ -1,5 +1,4 @@
-#!/usr/bin/python
 from waitress import serve
-from src import app
+from src.service.api import app
 
 serve(app, host='0.0.0.0', port=8080, threads=1)

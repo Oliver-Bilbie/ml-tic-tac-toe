@@ -1,0 +1,35 @@
+fail_fast: true
+default_stages: [commit]
+repos:
+- repo: local
+  hooks:
+    - id: format-src
+      name: Format
+      entry: make format-src
+      language: system
+      verbose: false
+    - id: pylint
+      name: Lint
+      entry: make lint
+      language: system
+      verbose: false
+    - id: type-check
+      name: Type Check
+      entry: make type-check
+      language: system
+      verbose: false
+    - id: bandit
+      name: Vulnerability Check
+      entry: make bandit
+      language: system
+      verbose: false
+    - id: unit-test
+      name: Unit Tests
+      entry: make unit-test
+      language: system
+      verbose: false
+    - id: int-test
+      name: Integration Tests
+      entry: make int-test
+      language: system
+      verbose: false
