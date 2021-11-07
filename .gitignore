@@ -1,2 +1,8 @@
-/src/__pycache__
-model.pkl
+/__pycache__
+/.pytest_cache
+/src/service/__pycache__
+/src/test/unit/__pycache__
+/src/test/integration/__pycache__
+/src/test/resources/__pycache__
+
+/target

@@ -1,0 +1,2 @@
+# Suppress security checks relating the the Pickle library
+skips: ['B301', 'B403']
