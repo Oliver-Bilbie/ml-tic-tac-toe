@@ -1,0 +1,16 @@
+Winner,Top-left-square,Top-middle-square,Top-right-square,Middle-left-square,Middle-middle-square,Middle-right-square,Bottom-left-square,Bottom-middle-square,Bottom-right-square
+x,x,x,x,b,b,b,b,b,b
+x,b,b,b,x,x,x,b,b,b
+x,b,b,b,b,b,b,x,x,x
+x,x,b,b,b,x,b,b,b,x
+x,b,x,b,b,x,b,b,x,b
+o,o,o,o,b,b,b,b,b,b
+o,b,b,b,o,o,o,b,b,b
+o,b,b,b,b,b,b,o,o,o
+o,o,b,b,b,o,b,b,b,o
+o,b,o,b,b,o,b,b,o,b
+b,b,b,b,b,b,b,b,b,b
+b,x,b,o,x,b,b,b,b,b
+b,b,b,b,b,b,b,b,b,b
+b,o,x,o,b,o,x,x,o,b
+b,x,o,x,o,x,o,o,x,o

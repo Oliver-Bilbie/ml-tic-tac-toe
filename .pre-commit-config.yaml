@@ -23,13 +23,13 @@ repos:
       entry: make bandit
       language: system
       verbose: false
-    - id: unit-test
-      name: Unit Tests
-      entry: make unit-test
-      language: system
-      verbose: false
-    - id: int-test
-      name: Integration Tests
-      entry: make int-test
-      language: system
-      verbose: false
+    # - id: unit-test
+    #   name: Unit Tests
+    #   entry: make unit-test
+    #   language: system
+    #   verbose: false
+    # - id: int-test
+    #   name: Integration Tests
+    #   entry: make int-test
+    #   language: system
+    #   verbose: false

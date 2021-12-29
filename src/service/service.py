@@ -7,6 +7,8 @@ import pandas as pd
 import numpy as np
 from sklearn import model_selection, ensemble
 
+from src.service import data_service
+
 
 class DataSet:
     """Object for handling test and training values of a dataset.
@@ -26,8 +28,11 @@ class DataSet:
         self.y_test = y_test
 
 
-def import_data_as_pandas():
+def import_data_as_pandas(model_number):
     """Import a csv file and returns it as a DataSet object as defined above.
+
+    Args:
+        model_number: Integer value corresponding to a ML model
 
     Returns:
         dataset: Object containing test and training sets of data for both
@@ -37,8 +42,25 @@ def import_data_as_pandas():
     with open("ml-ttt-data.csv") as csv_string:
         dataframe = pd.read_csv(csv_string)
 
-    predictive_features = dataframe.iloc[:, 1:]
-    target = dataframe.iloc[:, 0]
+    mapper = {
+        # No feature engineering
+        "1": dataframe,
+        # Balanced dataset
+        "2": data_service.balance_dataset(dataframe, 13),
+        # Number of x, o, b
+        "3": dataframe,
+        # Adjacent x, o, b
+        "4": dataframe,
+        # Best model without "cheating"
+        "5": dataframe,
+    }
+
+    dataframe = mapper.get(model_number)
+
+    dataframe.to_csv("test.csv")
+
+    predictive_features = dataframe.iloc[:, :]
+    target = dataframe.index
     dataset = DataSet(predictive_features, target)
 
     return dataset
@@ -54,7 +76,7 @@ def train_model(model_number):
         model: Scikit Learn random forest model"""
 
     # Import dataset from OpenML
-    game_states = import_data_as_pandas()
+    game_states = import_data_as_pandas(model_number)
 
     # One-Hot encode the predictive features
     game_states.x_train = pd.get_dummies(game_states.x_train)
