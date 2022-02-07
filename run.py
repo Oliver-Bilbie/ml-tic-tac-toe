@@ -1,3 +1,5 @@
+from distutils.log import debug
+from tabnanny import verbose
 from waitress import serve
 from src.service.api import app
 

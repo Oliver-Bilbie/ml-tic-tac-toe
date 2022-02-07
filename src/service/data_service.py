@@ -1,11 +1,33 @@
-import pandas as pd
+"""
+The data service module contains the logic for feature engineering and data manipulation
+"""
+
 import numpy as np
+import pandas as pd
+
+from src.service import generators
+
+
+def onehot_encode(dataset):
+    """Onehot encodes the board state features
+
+    Args:
+        dataset [DataFrame]: Pandas DataFrame containing the dataset to be onehot encoded
+
+    Returns:
+        [DataFrame]: Onehot encoded dataset
+    """
+
+    columns = generators.get_onehot_column_names()
+    dataset = pd.get_dummies(dataset.iloc[:, :9])[columns]
+
+    return dataset
 
 
 def balance_dataset(dataset, tolerance=0.05):
     """Balances a dataset by removing random entries.
     Accepts an optional tolerance parameter which corresponds to a maxiumum proportional difference
-    between the frequency of outcomes. Defaults to 5%.
+    between the frequency of outcomes (Defaults to 5%).
 
     Args:
         dataset [DataFrame] : DataFrame containing the dataset
@@ -18,7 +40,7 @@ def balance_dataset(dataset, tolerance=0.05):
     while not check_balancing(dataset.copy(), tolerance):
         # Randomly select a row until this row corresponds to an over-represented outcome
         row = np.random.randint(0, dataset.shape[0])
-        result = dataset.iloc[row, 0]
+        result = dataset.index[0]
         if check_overrepresented(dataset.copy(), result, tolerance):
             index = dataset.index[row]
             dataset.drop(index=index, inplace=True)
@@ -39,7 +61,7 @@ def check_balancing(dataset, tolerance):
     """
 
     balanced = True
-    outcomes = dataset.iloc[:, 0].value_counts()
+    outcomes = dataset.index.value_counts()
     count = outcomes.iloc[0]
 
     for outcome in outcomes[1:]:
@@ -63,7 +85,7 @@ def check_overrepresented(dataset, result, tolerance):
     """
 
     overrepresented = False
-    outcomes = dataset.iloc[:, 0].value_counts()
+    outcomes = dataset.index.value_counts()
     count = outcomes.loc[result]
 
     for outcome in outcomes:
@@ -123,44 +145,56 @@ def calculate_adjacent_symbols(dataset):
 
     """
 
-    # Assign a prime value to all Xs
-    x_df = dataset.iloc[:, 1:].replace(["x", "o", "b"], [1, 0, 0])
-    x_df.loc[:, "top-left-square"] *= 2
-    x_df.loc[:, "top-middle-square"] *= 3
-    x_df.loc[:, "top-right-square"] *= 5
-    x_df.loc[:, "middle-left-square"] *= 7
-    x_df.loc[:, "middle-middle-square"] *= 11
-    x_df.loc[:, "middle-right-square"] *= 13
-    x_df.loc[:, "bottom-left-square"] *= 17
-    x_df.loc[:, "bottom-middle-square"] *= 19
-    x_df.loc[:, "bottom-right-square"] *= 23
+    v_positions = ["top", "middle", "bottom"]  # All possible vertical positions
+    h_positions = ["left", "middle", "right"]  # All possible horizontal positions
 
-    # Find the product of each board state
-    products = (
-        x_df.loc[:, "top-left-square"].values
-        * x_df.loc[:, "top-middle-square"].values
-        * x_df.loc[:, "top-right-square"].values
-        * x_df.loc[:, "middle-left-square"].values
-        * x_df.loc[:, "middle-middle-square"].values
-        * x_df.loc[:, "middle-right-square"].values
-        * x_df.loc[:, "bottom-left-square"].values
-        * x_df.loc[:, "bottom-middle-square"].values
-        * x_df.loc[:, "bottom-right-square"].values
-    )
+    for player in ["x", "o"]:
+        # evaluate adj_horizontal
+        dataset[f"{player}_adj_horizontal"] = 0
+        for v_position in v_positions:
+            for h_index in [0, 1]:
+                adjacent_rows = (
+                    dataset[f"{v_position}-{h_positions[h_index]}-square"] == player
+                ) & (dataset[f"{v_position}-{h_positions[h_index+1]}-square"] == player)
 
-    # Take mods to find adjacent pairs
-    x_adj_horizontal = np.zeros([dataset.shape[0]])
+                dataset.loc[adjacent_rows, f"{player}_adj_horizontal"] += 1
 
-    test_values = products[products != 0] % 6
+        # evaluate adj_vertical
+        dataset[f"{player}_adj_vertical"] = 0
+        for v_index in [0, 1]:
+            for h_position in h_positions:
+                adjacent_rows = (
+                    dataset[f"{v_positions[v_index]}-{h_position}-square"] == player
+                ) & (dataset[f"{v_positions[v_index+1]}-{h_position}-square"] == player)
 
-    test_values[test_values != 0] = -1
-    test_values += 1
+                dataset.loc[adjacent_rows, f"{player}_adj_vertical"] += 1
 
-    print(test_values.sum())
+        # evaluate adj_diagonal_pos
+        dataset[f"{player}_adj_diagonal_pos"] = 0
+        for v_index in [0, 1]:
+            for h_index in [0, 1]:
+                adjacent_rows = (
+                    dataset[f"{v_positions[v_index+1]}-{h_positions[h_index]}-square"]
+                    == player
+                ) & (
+                    dataset[f"{v_positions[v_index]}-{h_positions[h_index+1]}-square"]
+                    == player
+                )
+
+                dataset.loc[adjacent_rows, f"{player}_adj_diagonal_pos"] += 1
+
+        # evaluate adj_diagonal_neg
+        dataset[f"{player}_adj_diagonal_neg"] = 0
+        for v_index in [0, 1]:
+            for h_index in [0, 1]:
+                adjacent_rows = (
+                    dataset[f"{v_positions[v_index]}-{h_positions[h_index]}-square"]
+                    == player
+                ) & (
+                    dataset[f"{v_positions[v_index+1]}-{h_positions[h_index+1]}-square"]
+                    == player
+                )
+
+                dataset.loc[adjacent_rows, f"{player}_adj_diagonal_neg"] += 1
 
     return dataset
-
-
-with open("ml-ttt-data.csv") as csv_string:
-    dataframe = pd.read_csv(csv_string)
-calculate_adjacent_symbols(dataframe)

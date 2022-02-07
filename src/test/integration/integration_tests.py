@@ -2,13 +2,12 @@ import pytest
 from unittest import mock
 import os
 
-import src.service.api as api
-import src.service.controller as controller
+from src.service import api, controller
 
 
 @mock.patch("src.service.api.jsonify")
 @mock.patch(
-    "src.service.api.controller.service.get_param_grid",
+    "src.service.api.controller.training_service.generators.get_param_grid",
     return_value={
         "n_estimators": [10],
         "max_features": ["sqrt"],
@@ -17,7 +16,7 @@ import src.service.controller as controller
     },
 )
 @mock.patch(
-    "src.service.api.controller.service.get_file_name",
+    "src.service.api.controller.file_service.get_file_name",
     return_value="src/test/resources/temp.pkl",
 )
 def test_train_model(mock_get_file_name, mock_param_grid, mock_jsonify):
@@ -37,7 +36,7 @@ def test_train_model(mock_get_file_name, mock_param_grid, mock_jsonify):
 
 
 @mock.patch(
-    "src.service.controller.service.get_file_name",
+    "src.service.controller.file_service.get_file_name",
     return_value="src/test/resources/model.pkl",
 )
 def test_controller_get_prediction(mock_get_file_name):
@@ -55,7 +54,7 @@ def test_controller_get_prediction(mock_get_file_name):
 
 @mock.patch("src.service.api.jsonify")
 @mock.patch(
-    "src.service.api.controller.service.get_file_name",
+    "src.service.api.controller.file_service.get_file_name",
     return_value="src/test/resources/model.pkl",
 )
 def test_get_prediction(mock_get_file_name, mock_jsonify):
@@ -72,7 +71,7 @@ def test_get_prediction(mock_get_file_name, mock_jsonify):
 
 @mock.patch("src.service.api.jsonify")
 @mock.patch(
-    "src.service.api.controller.service.get_file_name",
+    "src.service.api.controller.file_service.get_file_name",
     return_value="src/test/resources/model.pkl",
 )
 def test_get_prediction_invalid(mock_get_file_name, mock_jsonify):
@@ -89,7 +88,7 @@ def test_get_prediction_invalid(mock_get_file_name, mock_jsonify):
 
 @mock.patch("src.service.api.jsonify")
 @mock.patch(
-    "src.service.api.controller.service.get_file_name",
+    "src.service.api.controller.file_service.get_file_name",
     side_effect=Exception,
 )
 def test_get_prediction_unsuccessful(mock_get_file_name, mock_jsonify):
