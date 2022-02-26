@@ -3,7 +3,7 @@ import pytest
 import src.service.validator as validator
 
 
-def test_validate_prediction_request_valid():
+def test_validate_board_state_valid():
     """
     Test with valid requests
     """
@@ -15,11 +15,11 @@ def test_validate_prediction_request_valid():
     input_5 = "xbboxbobx"
 
     try:
-        validator.validate_prediction_request(input_1)
-        validator.validate_prediction_request(input_2)
-        validator.validate_prediction_request(input_3)
-        validator.validate_prediction_request(input_4)
-        validator.validate_prediction_request(input_5)
+        validator.validate_board_state(input_1)
+        validator.validate_board_state(input_2)
+        validator.validate_board_state(input_3)
+        validator.validate_board_state(input_4)
+        validator.validate_board_state(input_5)
         success = True
     except:
         success = False
@@ -27,7 +27,7 @@ def test_validate_prediction_request_valid():
     assert success
 
 
-def test_validate_prediction_request_too_short():
+def test_validate_board_state_too_short():
     """
     Test with eight-character request (nine required)
     """
@@ -37,11 +37,11 @@ def test_validate_prediction_request_too_short():
     exception_message = "Validation Error: Incorrect length"
 
     with pytest.raises(Exception) as re:
-        validator.validate_prediction_request(input)
+        validator.validate_board_state(input)
         assert exception_message == str(re.value)
 
 
-def test_validate_prediction_request_too_long():
+def test_validate_board_state_too_long():
     """
     Test with ten-character request (nine required)
     """
@@ -51,11 +51,11 @@ def test_validate_prediction_request_too_long():
     exception_message = "Validation Error: Incorrect length"
 
     with pytest.raises(Exception) as re:
-        validator.validate_prediction_request(input)
+        validator.validate_board_state(input)
         assert exception_message == str(re.value)
 
 
-def test_validate_prediction_request_invalid_character():
+def test_validate_board_state_invalid_character():
     """
     Test with an invalid input
     """
@@ -65,11 +65,11 @@ def test_validate_prediction_request_invalid_character():
     exception_message = "Validation Error: Invalid character"
 
     with pytest.raises(Exception) as re:
-        validator.validate_prediction_request(input)
+        validator.validate_board_state(input)
         assert exception_message == str(re.value)
 
 
-def test_validate_prediction_request_empty():
+def test_validate_board_state_empty():
     """
     Test with an empty string
     """
@@ -79,11 +79,11 @@ def test_validate_prediction_request_empty():
     exception_message = "Validation Error: Incorrect length"
 
     with pytest.raises(Exception) as re:
-        validator.validate_prediction_request(input)
+        validator.validate_board_state(input)
         assert exception_message == str(re.value)
 
 
-def test_validate_prediction_request_bad_type():
+def test_validate_board_state_bad_type():
     """
     Test with an integer (requires a string)
     """
@@ -93,11 +93,11 @@ def test_validate_prediction_request_bad_type():
     exception_message = "Validation Error: Invalid input"
 
     with pytest.raises(Exception) as re:
-        validator.validate_prediction_request(input)
+        validator.validate_board_state(input)
         assert exception_message == str(re.value)
 
 
-def test_validate_train_request_valid():
+def test_validate_model_number_valid():
     """
     Test with a valid input value
     """
@@ -105,7 +105,7 @@ def test_validate_train_request_valid():
     model_number = "1"
 
     try:
-        validator.validate_train_request(model_number)
+        validator.validate_model_number(model_number)
         success = True
     except:
         success = False
@@ -113,7 +113,7 @@ def test_validate_train_request_valid():
     assert success
 
 
-def test_validate_train_request_invalid():
+def test_validate_model_number_invalid():
     """
     Test with an invalid input value
     """
@@ -123,5 +123,5 @@ def test_validate_train_request_invalid():
     exception_message = "Validation Error: Invalid model reference"
 
     with pytest.raises(Exception) as re:
-        validator.validate_train_request(input)
+        validator.validate_model_number(input)
         assert exception_message == str(re.value)

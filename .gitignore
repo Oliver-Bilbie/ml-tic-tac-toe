@@ -1,5 +1,7 @@
 /__pycache__
 /.pytest_cache
+/.mypy_cache
+/.idea
 /src/service/__pycache__
 /src/test/unit/__pycache__
 /src/test/integration/__pycache__
