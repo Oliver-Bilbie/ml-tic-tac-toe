@@ -5,37 +5,34 @@ The service module contains the prediction functionality of the project
 import pandas as pd
 import numpy as np
 
-from src.service import generators
+from src.service import data_service, generators
 
 
-def handle_user_input(board_state):
+def handle_user_input(board_state, model_number):
     """Converts raw user inputs into a Pandas Dataframe object
     which may be used with the predictive model.
 
     Args:
         board_state [String]: string containing the board state from top-left to bottom-right.
                               where 'x' == cross, 'o' == nought, 'b' == blank
+        model_number [String]: Integer value corresponding to a ML model.
 
     Returns:
         [DataFrame]: Pandas Dataframe containing reformatted and one-hot encoded user inputs.
     """
 
-    # Create 1x27 Dataframe with all zero values
-    column_names = generators.get_onehot_column_names()
-    input_df = pd.DataFrame(np.zeros(27), index=column_names).transpose()
+    column_names = generators.get_board_state_column_names()
+    input_df = pd.DataFrame(np.zeros(9), index=column_names).transpose()
+    for square_index in range(0, 9):
+        input_df.iloc[0, square_index] = board_state[square_index]
 
-    # Populate the Dataframe with user inputs
-    for input_number in range(0, 9):
-        if board_state[input_number] == "x":
-            column_number = input_number
-        elif board_state[input_number] == "o":
-            column_number = input_number + 9
-        elif board_state[input_number] == "b":
-            column_number = input_number + 18
-        else:
-            raise Exception("Invalid input character")
+    # Append engineered features where required
+    if model_number == "3":
+        input_df = data_service.calculate_move_counts(input_df)
+    elif model_number == "4":
+        input_df = data_service.calculate_adjacent_symbols(input_df)
 
-        input_df.iloc[0, column_number] = 1
+    input_df = data_service.ordinal_encode(input_df)
 
     return input_df
 

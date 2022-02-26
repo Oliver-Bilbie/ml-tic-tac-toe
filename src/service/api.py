@@ -50,3 +50,22 @@ def train_model(model_number):
 
     except Exception:
         return jsonify(status=500, message="Server was unable to process the request")
+
+
+@app.route("/test-model/<model_number>")
+@cross_origin(supports_credentials=True)
+def test_model(model_number):
+    """Returns performance metrics for a given model
+
+    Args:
+        model_number: Integer value corresponding to a ML model."""
+
+    try:
+        results = controller.test_model(model_number)
+        return jsonify(status=200, message=results)
+
+    except ValueError:
+        return jsonify(status=400, message="Invalid request")
+
+    except Exception:
+        return jsonify(status=500, message="Server was unable to process the request")

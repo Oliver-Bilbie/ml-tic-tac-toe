@@ -4,12 +4,13 @@ The data service module contains the logic for feature engineering and data mani
 
 import numpy as np
 import pandas as pd
+from sklearn.utils import resample
 
 from src.service import generators
 
 
 def onehot_encode(dataset):
-    """Onehot encodes the board state features
+    """Onehot encodes the board state features while preserving additional features
 
     Args:
         dataset [DataFrame]: Pandas DataFrame containing the dataset to be onehot encoded
@@ -18,82 +19,125 @@ def onehot_encode(dataset):
         [DataFrame]: Onehot encoded dataset
     """
 
-    columns = generators.get_onehot_column_names()
-    dataset = pd.get_dummies(dataset.iloc[:, :9])[columns]
+    columns_to_encode = generators.get_board_state_column_names()
+
+    # Preserve additional columns
+    additional_columns = []
+    for name in dataset.columns:
+        if not name in columns_to_encode:
+            additional_columns.append(name)
+
+    # Append additional entries to ensure that all posibilities are one-hot encoded
+    temp_rows = pd.DataFrame(
+        {
+            "top-left-square": ["x", "o", "b"],
+            "top-middle-square": ["x", "o", "b"],
+            "top-right-square": ["x", "o", "b"],
+            "middle-left-square": ["x", "o", "b"],
+            "middle-middle-square": ["x", "o", "b"],
+            "middle-right-square": ["x", "o", "b"],
+            "bottom-left-square": ["x", "o", "b"],
+            "bottom-middle-square": ["x", "o", "b"],
+            "bottom-right-square": ["x", "o", "b"],
+        },
+        index=["temp", "temp", "temp"],
+    )
+    dataset = pd.concat([dataset, temp_rows])
+
+    # Encode dataset
+    onehot_dataset = pd.get_dummies(data=dataset[columns_to_encode])
+
+    # Re-assemble the dataset and remove the temporary data items
+    additional_dataset = dataset[additional_columns]
+    complete_dataset = pd.concat([onehot_dataset, additional_dataset], axis=1)
+    complete_dataset = complete_dataset[complete_dataset.index != "temp"]
+
+    return complete_dataset
+
+
+def ordinal_encode(dataset):
+    """Numerically encodes the board state features such that:
+        x => 1
+        b => 0
+        o => -1
+
+    Args:
+        dataset [DataFrame]: Pandas DataFrame containing the dataset to be encoded
+
+    Returns:
+        [DataFrame]: Numerically encoded dataset
+    """
+
+    dataset = dataset.replace(["x", "b", "o"], [1, 0, -1])
 
     return dataset
 
 
-def balance_dataset(dataset, tolerance=0.05):
-    """Balances a dataset by removing random entries.
-    Accepts an optional tolerance parameter which corresponds to a maxiumum proportional difference
-    between the frequency of outcomes (Defaults to 5%).
+def downsample_dataset(dataset):
+    """Reduces the number of data items such that all outcomes are equally represented
 
     Args:
-        dataset [DataFrame] : DataFrame containing the dataset
-        tolerance [Float]   : Maximum allowed difference in outcome frequency
+        dataset [DataFrame]: Pandas DataFrame containing the dataset to be downsampled
 
     Returns:
-        [DataFrame]: DataFrame containing a balanced dataset
+        [DataFrame]: Downsampled dataset
     """
 
-    while not check_balancing(dataset.copy(), tolerance):
-        # Randomly select a row until this row corresponds to an over-represented outcome
-        row = np.random.randint(0, dataset.shape[0])
-        result = dataset.index[0]
-        if check_overrepresented(dataset.copy(), result, tolerance):
-            index = dataset.index[row]
-            dataset.drop(index=index, inplace=True)
+    value_counts = dataset.index.value_counts(sort=True)
+    target_size = value_counts[-1]
+    outcomes_to_downsample = value_counts.index[:-1]
+
+    # List of datasets to be combined once everything has been downsampled
+    # We initially add the smallest item since this is not going to be downsampled
+    downsampled_datasets = [dataset[dataset.index == value_counts.index[-1]]]
+
+    for outcome in outcomes_to_downsample:
+        downsampled_datasets.append(
+            resample(
+                dataset[dataset.index == outcome],
+                replace=False,
+                n_samples=target_size,
+                random_state=0,
+            )
+        )
+
+    dataset = pd.concat(downsampled_datasets)
 
     return dataset
 
 
-def check_balancing(dataset, tolerance):
-    """Checks whether a dataset is balanced. Returns "True" if balanced
-    (within given tolerance), otherwise "False".
+def upsample_dataset(dataset):
+    """Increases the number of data items such that all outcomes are equally represented.
+    This is achieved by duplication of under-represented outcomes.
 
     Args:
-        dataset [DataFrame] : DataFrame containing the dataset
-        tolerance [Float]   : Maximum allowed difference in outcome frequency
+        dataset [DataFrame]: Pandas DataFrame containing the dataset to be upsampled
 
     Returns:
-        [Boolean]: True if balanced, otherwise False
+        [DataFrame]: Upsampled dataset
     """
 
-    balanced = True
-    outcomes = dataset.index.value_counts()
-    count = outcomes.iloc[0]
+    value_counts = dataset.index.value_counts(sort=True)
+    target_size = value_counts[0]
+    outcomes_to_upsample = value_counts.index[1:]
 
-    for outcome in outcomes[1:]:
-        if outcome > count * (1 + tolerance) or outcome < count * (1 - tolerance):
-            balanced = False
-            break
+    # List of datasets to be combined once everything has been upsampled
+    # We initially add the largest item since this is not going to be upsampled
+    upsampled_datasets = [dataset[dataset.index == value_counts.index[0]]]
 
-    return balanced
+    for outcome in outcomes_to_upsample:
+        upsampled_datasets.append(
+            resample(
+                dataset[dataset.index == outcome],
+                replace=True,
+                n_samples=target_size,
+                random_state=0,
+            )
+        )
 
+    dataset = pd.concat(upsampled_datasets)
 
-def check_overrepresented(dataset, result, tolerance):
-    """Checks whether an outcome is over-represented in a given dataset.
-    Returns "True" if over-represented (within given tolerance), otherwise "False".
-
-    Args:
-        dataset [DataFrame] : DataFrame containing the dataset
-        tolerance [Float]   : Maximum allowed difference in outcome frequency
-
-    Returns:
-        [Boolean]: True if balanced, otherwise False
-    """
-
-    overrepresented = False
-    outcomes = dataset.index.value_counts()
-    count = outcomes.loc[result]
-
-    for outcome in outcomes:
-        if outcome < count * (1 - tolerance):
-            overrepresented = True
-            break
-
-    return overrepresented
+    return dataset
 
 
 def calculate_move_counts(dataset):
@@ -110,12 +154,12 @@ def calculate_move_counts(dataset):
     """
 
     # Replace all X values with 1 and all other values with 0
-    x_df = dataset.iloc[:, 1:].replace(["x", "o", "b"], [1, 0, 0])
+    x_df = dataset.copy().replace(["x", "o", "b"], [1, 0, 0])
     # Sum each row
     x_count = x_df.sum(axis=1)
 
     # Replace all O values with 1 and all other values with 0
-    o_df = dataset.iloc[:, 1:].replace(["x", "o", "b"], [0, 1, 0])
+    o_df = dataset.copy().replace(["x", "o", "b"], [0, 1, 0])
     # Sum each row
     o_count = o_df.sum(axis=1)
 

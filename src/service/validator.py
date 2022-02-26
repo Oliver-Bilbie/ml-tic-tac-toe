@@ -28,5 +28,5 @@ def validate_model_number(model_number):
     Args:
         model_number: string corresponding to a model number."""
 
-    if not model_number in ["1", "2", "3", "4", "5"]:
+    if not model_number in ["1", "2", "3", "4", "5", "6", "7"]:
         raise ValueError("Validation Error: Invalid model reference")
