@@ -14,7 +14,7 @@ coverage = "5.2"
 pre-commit = "*"
 
 [packages]
-numpy = "*"
+numpy = ">=1.21"
 pandas = "*"
 sklearn = "*"
 flask = "0.12.2"
