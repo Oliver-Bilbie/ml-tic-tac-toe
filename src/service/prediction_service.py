@@ -26,11 +26,21 @@ def handle_user_input(board_state, model_number):
     for square_index in range(0, 9):
         input_df.iloc[0, square_index] = board_state[square_index]
 
-    # Append engineered features where required
-    if model_number == "3":
-        input_df = data_service.calculate_move_counts(input_df)
-    elif model_number == "4":
-        input_df = data_service.calculate_adjacent_symbols(input_df)
+    # Apply any necessary manipulation
+    if model_number == "1":
+        input_df = data_service.onehot_encode(input_df)
+    elif model_number == "5":
+        input_df = data_service.ordinal_encode(
+            data_service.calculate_move_counts(input_df)
+        )
+    elif model_number == "6":
+        input_df = data_service.calculate_adjacent_symbols(input_df).iloc[:, 9:]
+    elif model_number == "7":
+        input_df = data_service.ordinal_encode(
+            data_service.calculate_adjacent_symbols(input_df)
+        )
+    else:
+        input_df = data_service.ordinal_encode(input_df)
 
     input_df = data_service.ordinal_encode(input_df)
 

@@ -25,7 +25,7 @@ def train_model(model_number):
     # Build random forest model and tune hyper-parameters
     random_forest = ensemble.RandomForestClassifier()
     param_grid = generators.get_param_grid()
-    model = model_selection.GridSearchCV(random_forest, param_grid, n_jobs=1)
+    model = model_selection.GridSearchCV(random_forest, param_grid)
     model.fit(predictive_features, target_feature)
 
     return model
